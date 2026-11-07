@@ -1,0 +1,672 @@
+
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kalkulator Penjadwalan CPU - FCFS & SRTF</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <style>
+        html, body { min-height: 100%; }
+
+        body {
+            background-color: #f8f9fa;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        main { flex: 1; }
+
+        .site-header {
+            background: linear-gradient(120deg, #123b73, #0d6efd);
+            color: #fff;
+            box-shadow: 0 3px 12px rgba(0,0,0,.12);
+        }
+
+        .site-brand {
+            font-weight: 700;
+            letter-spacing: .2px;
+        }
+
+        .site-subtitle {
+            color: rgba(255,255,255,.82);
+            font-size: .9rem;
+        }
+
+        .site-footer {
+            background: #172b4d;
+            color: rgba(255,255,255,.85);
+            margin-top: 3rem;
+        }
+
+        .site-footer a { color: #fff; }
+
+        /* Gantt Chart responsif */
+        .gantt-chart {
+            display: flex;
+            width: 100%;
+            overflow: hidden;
+            border: 1px solid #dee2e6;
+            background: white;
+            border-radius: .375rem;
+            margin-top: 1rem;
+        }
+
+        .gantt-block {
+            flex: var(--duration) 1 0;
+            min-width: 0;
+            text-align: center;
+            border-right: 1px solid #dee2e6;
+        }
+
+        .gantt-process, .gantt-idle {
+            color: white;
+            padding: 10px 2px;
+            font-weight: bold;
+            min-height: 42px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .gantt-process { background-color: #0d6efd; }
+        .gantt-idle { background-color: #6c757d; }
+
+        .gantt-time {
+            display: flex;
+            justify-content: space-between;
+            gap: 2px;
+            font-size: clamp(.65rem, 1.4vw, .85rem);
+            padding: 2px 3px;
+            background-color: #e9ecef;
+            color: #495057;
+            white-space: nowrap;
+        }
+
+        @media (max-width: 576px) {
+            .gantt-process, .gantt-idle {
+                padding: 8px 1px;
+                font-size: .75rem;
+            }
+
+            .gantt-time { font-size: .65rem; }
+        }
+
+        .note { font-size: .9rem; }
+    </style>
+</head>
+
+<body>
+    <!-- HEADER -->
+    <header class="site-header py-3">
+        <div class="container d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3">
+            <div>
+                <div class="site-brand fs-4">CPU Scheduler</div>
+                <div class="site-subtitle">
+                    Kalkulator simulasi penjadwalan proses pada CPU
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main>
+    <div class="container py-5" id="kalkulator">
+
+        <div class="text-center mb-4">
+            <h1 class="h2 fw-bold">Kalkulator Penjadwalan CPU</h1>
+            <p class="text-muted mb-0">
+                Bandingkan algoritma FCFS dan SRTF melalui tabel perhitungan dan Gantt Chart.
+            </p>
+        </div>
+
+        <div class="row">
+            <!-- INPUT PROSES -->
+            <div class="col-lg-5 mb-4">
+                <div class="card shadow-sm">
+
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="card-title mb-0">Input Proses</h5>
+                    </div>
+
+                    <div class="card-body">
+
+                        <div class="mb-3">
+                            <label for="algorithm" class="form-label fw-bold">
+                                Pilih Algoritma:
+                            </label>
+
+                            <select id="algorithm" class="form-select">
+                                <option value="FCFS">
+                                    First Come First Serve (FCFS)
+                                </option>
+                                <option value="SRTF">
+                                    Shortest Remaining Time First (SRTF)
+                                </option>
+                            </select>
+                        </div>
+
+                        <div class="table-responsive">
+                            <table class="table table-bordered text-center" id="processTable">
+
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Proses</th>
+                                        <th>Arrival Time (AT)</th>
+                                        <th>Burst Time (BT)</th>
+                                        <th>Aksi</th>
+                                    </tr>
+                                </thead>
+
+                                <tbody id="tableBody">
+
+                                    <tr>
+                                        <td class="align-middle fw-bold">P1</td>
+                                        <td>
+                                            <input type="number" class="form-control at-input"
+                                                value="0" min="0" step="1" required>
+                                        </td>
+                                        <td>
+                                            <input type="number" class="form-control bt-input"
+                                                value="5" min="1" step="1" required>
+                                        </td>
+                                        <td>
+                                            <button class="btn btn-danger btn-sm"
+                                                onclick="removeRow(this)">Hapus</button>
+                                        </td>
+                                    </tr>
+
+                                    <tr>
+                                        <td class="align-middle fw-bold">P2</td>
+                                        <td>
+                                            <input type="number" class="form-control at-input"
+                                                value="1" min="0" step="1" required>
+                                        </td>
+                                        <td>
+                                            <input type="number" class="form-control bt-input"
+                                                value="3" min="1" step="1" required>
+                                        </td>
+                                        <td>
+                                            <button class="btn btn-danger btn-sm"
+                                                onclick="removeRow(this)">Hapus</button>
+                                        </td>
+                                    </tr>
+
+                                    <tr>
+                                        <td class="align-middle fw-bold">P3</td>
+                                        <td>
+                                            <input type="number" class="form-control at-input"
+                                                value="2" min="0" step="1" required>
+                                        </td>
+                                        <td>
+                                            <input type="number" class="form-control bt-input"
+                                                value="8" min="1" step="1" required>
+                                        </td>
+                                        <td>
+                                            <button class="btn btn-danger btn-sm"
+                                                onclick="removeRow(this)">Hapus</button>
+                                        </td>
+                                    </tr>
+
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div class="d-flex justify-content-between">
+                            <button class="btn btn-secondary" onclick="addRow()">
+                                + Tambah Proses
+                            </button>
+
+                            <button class="btn btn-success" onclick="calculate()">
+                                Hitung
+                            </button>
+                        </div>
+
+                        <p class="text-muted note mt-3 mb-0">
+                            Gunakan bilangan bulat nonnegatif untuk AT dan bilangan bulat positif untuk BT.
+                            Semua waktu menggunakan satuan ms (milidetik).
+                        </p>
+
+                    </div>
+                </div>
+            </div>
+
+            <!-- HASIL PERHITUNGAN -->
+            <div class="col-lg-7" id="hasil">
+
+                <div class="card shadow-sm mb-4">
+
+                    <div class="card-header bg-success text-white">
+                        <h5 class="card-title mb-0">Hasil Perhitungan</h5>
+                    </div>
+
+                    <div class="card-body" id="resultContainer" style="display:none;">
+
+                        <div class="table-responsive">
+                            <table class="table table-striped table-hover text-center align-middle">
+
+                                <thead class="table-dark">
+                                    <tr>
+                                        <th>Proses</th>
+                                        <th>AT</th>
+                                        <th>BT</th>
+                                        <th>Completion Time (CT)</th>
+                                        <th>Turn Around Time (TAT)</th>
+                                        <th>Waiting Time (WT)</th>
+                                    </tr>
+                                </thead>
+
+                                <tbody id="resultBody"></tbody>
+                                <tfoot class="table-light fw-bold" id="resultFoot"></tfoot>
+
+                            </table>
+                        </div>
+
+                        <p id="algorithmNote" class="text-muted note mb-0"></p>
+
+                    </div>
+                </div>
+
+                <!-- GANTT CHART -->
+                <div class="card shadow-sm">
+
+                    <div class="card-header bg-info text-white">
+                        <h5 class="card-title mb-0">Gantt Chart</h5>
+                    </div>
+
+                    <div class="card-body">
+
+                        <div id="ganttContainer" style="display:none;">
+                            <div class="gantt-chart" id="ganttChart"></div>
+                        </div>
+
+                        <p id="ganttEmpty" class="text-muted mt-3 mb-0">
+                            Silakan klik "Hitung" untuk melihat Gantt Chart.
+                        </p>
+
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="site-footer py-4" id="tentang">
+        <div class="container text-center">
+
+            <div class="fw-semibold mb-1">
+                CPU Scheduler — FCFS &amp; SRTF
+            </div>
+
+            <p class="small mb-2">
+                Media pembelajaran untuk memahami algoritma penjadwalan CPU pada Sistem Operasi.
+            </p>
+
+            <div class="small">
+                &copy; <span id="copyrightYear">2026</span>
+                CPU Scheduler. Dibuat untuk keperluan edukasi.
+            </div>
+
+        </div>
+    </footer>
+
+    <script>
+
+        document.getElementById('copyrightYear').textContent =
+            new Date().getFullYear();
+
+        // Memperbarui label proses agar tetap berurutan setelah tambah/hapus baris.
+        function updateRowNumbers() {
+            document.querySelectorAll('#tableBody tr').forEach((row, index) => {
+                row.cells[0].textContent = `P${index + 1}`;
+            });
+        }
+
+        // Menambahkan proses baru.
+        function addRow() {
+            const tbody = document.getElementById('tableBody');
+            const tr = document.createElement('tr');
+
+            tr.innerHTML = `
+                <td class="align-middle fw-bold"></td>
+                <td>
+                    <input type="number" class="form-control at-input"
+                        value="0" min="0" step="1" required>
+                </td>
+                <td>
+                    <input type="number" class="form-control bt-input"
+                        value="1" min="1" step="1" required>
+                </td>
+                <td>
+                    <button class="btn btn-danger btn-sm"
+                        onclick="removeRow(this)">Hapus</button>
+                </td>
+            `;
+
+            tbody.appendChild(tr);
+            updateRowNumbers();
+        }
+
+        // Menghapus proses.
+        function removeRow(button) {
+            button.closest('tr').remove();
+            updateRowNumbers();
+        }
+
+        // Membaca dan memvalidasi input sebelum algoritma dijalankan.
+        function readProcesses() {
+            const rows = document.querySelectorAll('#tableBody tr');
+
+            if (rows.length === 0) {
+                alert('Tambahkan minimal satu proses.');
+                return null;
+            }
+
+            const processes = [];
+
+            for (let i = 0; i < rows.length; i++) {
+
+                const atText = rows[i].querySelector('.at-input').value.trim();
+                const btText = rows[i].querySelector('.bt-input').value.trim();
+
+                if (atText === '' || btText === '') {
+                    alert(`AT dan BT pada P${i + 1} tidak boleh kosong.`);
+                    return null;
+                }
+
+                const at = Number(atText);
+                const bt = Number(btText);
+
+                if (!Number.isSafeInteger(at) || at < 0) {
+                    alert(`Arrival Time P${i + 1} harus berupa bilangan bulat >= 0.`);
+                    return null;
+                }
+
+                if (!Number.isSafeInteger(bt) || bt <= 0) {
+                    alert(`Burst Time P${i + 1} harus berupa bilangan bulat > 0.`);
+                    return null;
+                }
+
+                processes.push({
+                    id: `P${i + 1}`,
+                    at,
+                    bt,
+                    rt: bt,
+                    ct: 0,
+                    tat: 0,
+                    wt: 0,
+                    order: i
+                });
+            }
+
+            return processes;
+        }
+
+        // Menjalankan algoritma sesuai pilihan pengguna.
+        function calculate() {
+            const processes = readProcesses();
+            if (!processes) return;
+
+            const algo = document.getElementById('algorithm').value;
+
+            const result = algo === 'FCFS'
+                ? calculateFCFS(processes)
+                : calculateSRTF(processes);
+
+            renderResults(result.processes, algo);
+            renderGanttChart(result.gantt);
+        }
+
+        // ALGORITMA FCFS
+        function calculateFCFS(processes) {
+
+            const sorted = [...processes].sort((a, b) =>
+                (a.at - b.at) || (a.order - b.order)
+            );
+
+            let currentTime = 0;
+            const gantt = [];
+
+            for (const p of sorted) {
+
+                if (currentTime < p.at) {
+                    gantt.push({
+                        id: 'IDLE',
+                        start: currentTime,
+                        end: p.at
+                    });
+
+                    currentTime = p.at;
+                }
+
+                const startTime = currentTime;
+
+                p.ct = startTime + p.bt;
+                p.tat = p.ct - p.at;
+                p.wt = p.tat - p.bt;
+
+                currentTime = p.ct;
+
+                gantt.push({
+                    id: p.id,
+                    start: startTime,
+                    end: currentTime
+                });
+            }
+
+            return {
+                processes: [...processes].sort((a, b) => a.order - b.order),
+                gantt
+            };
+        }
+
+        // ALGORITMA SRTF
+        function calculateSRTF(processes) {
+
+            const n = processes.length;
+
+            const sortedByArrival = [...processes].sort((a, b) =>
+                (a.at - b.at) || (a.order - b.order)
+            );
+
+            let currentTime = 0;
+            let completed = 0;
+            let nextArrivalIndex = 0;
+            let runningProcess = null;
+
+            const gantt = [];
+
+            function addGanttBlock(id, start, end) {
+
+                if (end <= start) return;
+
+                const last = gantt[gantt.length - 1];
+
+                if (last && last.id === id && last.end === start) {
+                    last.end = end;
+                } else {
+                    gantt.push({ id, start, end });
+                }
+            }
+
+            while (completed < n) {
+
+                if (
+                    runningProcess === null &&
+                    nextArrivalIndex < n &&
+                    sortedByArrival[nextArrivalIndex].at > currentTime
+                ) {
+                    const nextTime = sortedByArrival[nextArrivalIndex].at;
+
+                    addGanttBlock('IDLE', currentTime, nextTime);
+                    currentTime = nextTime;
+                }
+
+                while (
+                    nextArrivalIndex < n &&
+                    sortedByArrival[nextArrivalIndex].at <= currentTime
+                ) {
+                    nextArrivalIndex++;
+                }
+
+                const ready = processes.filter(p =>
+                    p.at <= currentTime && p.rt > 0
+                );
+
+                ready.sort((a, b) => {
+
+                    if (a.rt !== b.rt) return a.rt - b.rt;
+
+                    if (runningProcess) {
+                        if (a.id === runningProcess.id) return -1;
+                        if (b.id === runningProcess.id) return 1;
+                    }
+
+                    return (a.at - b.at) || (a.order - b.order);
+                });
+
+                const selected = ready[0];
+
+                let runDuration = selected.rt;
+
+                if (nextArrivalIndex < n) {
+
+                    const nextArrivalTime =
+                        sortedByArrival[nextArrivalIndex].at;
+
+                    const untilArrival = nextArrivalTime - currentTime;
+
+                    if (untilArrival > 0) {
+                        runDuration = Math.min(runDuration, untilArrival);
+                    }
+                }
+
+                const startTime = currentTime;
+
+                selected.rt -= runDuration;
+                currentTime += runDuration;
+
+                addGanttBlock(selected.id, startTime, currentTime);
+
+                runningProcess = selected.rt > 0 ? selected : null;
+
+                if (selected.rt === 0) {
+
+                    selected.ct = currentTime;
+                    selected.tat = selected.ct - selected.at;
+                    selected.wt = selected.tat - selected.bt;
+
+                    completed++;
+                    runningProcess = null;
+                }
+            }
+
+            return {
+                processes: [...processes].sort((a, b) => a.order - b.order),
+                gantt
+            };
+        }
+
+        // MENAMPILKAN HASIL PERHITUNGAN
+        function renderResults(processes, algorithm) {
+
+            const tbody = document.getElementById('resultBody');
+            const tfoot = document.getElementById('resultFoot');
+
+            document.getElementById('resultContainer').style.display = 'block';
+
+            tbody.innerHTML = '';
+
+            let totalTat = 0;
+            let totalWt = 0;
+
+            processes.forEach(p => {
+
+                totalTat += p.tat;
+                totalWt += p.wt;
+
+                const tr = document.createElement('tr');
+
+                [p.id, p.at, p.bt, p.ct, p.tat, p.wt].forEach(value => {
+
+                    const td = document.createElement('td');
+                    td.textContent = value;
+
+                    tr.appendChild(td);
+                });
+
+                tbody.appendChild(tr);
+            });
+
+            const avgTat = totalTat / processes.length;
+            const avgWt = totalWt / processes.length;
+
+            // Rata-rata ditampilkan dengan satuan ms.
+            tfoot.innerHTML = `
+                <tr>
+                    <td colspan="4" class="text-end">Rata-rata:</td>
+                    <td>${avgTat.toFixed(2)} ms</td>
+                    <td>${avgWt.toFixed(2)} ms</td>
+                </tr>
+            `;
+
+            document.getElementById('algorithmNote').textContent =
+                algorithm === 'FCFS'
+                    ? 'FCFS bersifat non-preemptive: proses yang mulai berjalan akan diselesaikan terlebih dahulu.'
+                    : 'SRTF bersifat preemptive: proses dapat dihentikan sementara jika proses lain yang datang memiliki Remaining Time lebih kecil.';
+        }
+
+        // MENAMPILKAN GANTT CHART
+        function renderGanttChart(ganttData) {
+
+            const chart = document.getElementById('ganttChart');
+
+            document.getElementById('ganttContainer').style.display = 'block';
+            document.getElementById('ganttEmpty').style.display = 'none';
+
+            chart.innerHTML = '';
+
+            if (ganttData.length === 0) return;
+
+            ganttData.forEach(block => {
+
+                const duration = block.end - block.start;
+
+                const wrapper = document.createElement('div');
+                wrapper.className = 'gantt-block';
+
+                wrapper.style.setProperty('--duration', duration);
+
+                const processLabel = document.createElement('div');
+
+                processLabel.className = block.id === 'IDLE'
+                    ? 'gantt-idle'
+                    : 'gantt-process';
+
+                processLabel.textContent = block.id;
+
+                const timeLabel = document.createElement('div');
+                timeLabel.className = 'gantt-time';
+
+                const start = document.createElement('span');
+                start.textContent = block.start;
+
+                const end = document.createElement('span');
+                end.textContent = block.end;
+
+                timeLabel.append(start, end);
+
+                wrapper.append(processLabel, timeLabel);
+                chart.appendChild(wrapper);
+            });
+        }
+
+    </script>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+</body>
+</html>
