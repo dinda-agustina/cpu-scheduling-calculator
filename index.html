@@ -464,8 +464,8 @@
         }
 
         // ALGORITMA SRTF
+        
         function calculateSRTF(processes) {
-
             const n = processes.length;
 
             const sortedByArrival = [...processes].sort((a, b) =>
@@ -480,7 +480,6 @@
             const gantt = [];
 
             function addGanttBlock(id, start, end) {
-
                 if (end <= start) return;
 
                 const last = gantt[gantt.length - 1];
@@ -494,17 +493,6 @@
 
             while (completed < n) {
 
-                if (
-                    runningProcess === null &&
-                    nextArrivalIndex < n &&
-                    sortedByArrival[nextArrivalIndex].at > currentTime
-                ) {
-                    const nextTime = sortedByArrival[nextArrivalIndex].at;
-
-                    addGanttBlock('IDLE', currentTime, nextTime);
-                    currentTime = nextTime;
-                }
-
                 while (
                     nextArrivalIndex < n &&
                     sortedByArrival[nextArrivalIndex].at <= currentTime
@@ -516,9 +504,20 @@
                     p.at <= currentTime && p.rt > 0
                 );
 
+                if (ready.length === 0) {
+
+                    if (nextArrivalIndex >= n) break;
+                    const nextTime = sortedByArrival[nextArrivalIndex].at;
+                    addGanttBlock('IDLE', currentTime, nextTime);
+                    currentTime = nextTime;
+                    continue;
+                }
+
                 ready.sort((a, b) => {
 
-                    if (a.rt !== b.rt) return a.rt - b.rt;
+                    if (a.rt !== b.rt) {
+                        return a.rt - b.rt;
+                    }
 
                     if (runningProcess) {
                         if (a.id === runningProcess.id) return -1;
@@ -533,10 +532,7 @@
                 let runDuration = selected.rt;
 
                 if (nextArrivalIndex < n) {
-
-                    const nextArrivalTime =
-                        sortedByArrival[nextArrivalIndex].at;
-
+                    const nextArrivalTime = sortedByArrival[nextArrivalIndex].at;
                     const untilArrival = nextArrivalTime - currentTime;
 
                     if (untilArrival > 0) {
@@ -551,8 +547,6 @@
 
                 addGanttBlock(selected.id, startTime, currentTime);
 
-                runningProcess = selected.rt > 0 ? selected : null;
-
                 if (selected.rt === 0) {
 
                     selected.ct = currentTime;
@@ -561,6 +555,9 @@
 
                     completed++;
                     runningProcess = null;
+
+                } else {
+                    runningProcess = selected;
                 }
             }
 
@@ -569,6 +566,7 @@
                 gantt
             };
         }
+
 
         // MENAMPILKAN HASIL PERHITUNGAN
         function renderResults(processes, algorithm) {
